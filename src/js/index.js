@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const form = document.querySelector('.form-group');
     const textArea = document.getElementById('description');
+    const htmlCode = document.getElementById('html-code');
+    const cssCode = document.getElementById('css-code');
+    const preview = document.getElementById('preview-section');
+
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -24,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const description = textArea.value.trim();
 
-        if(!description){
+        if (!description) {
             return;
         }
         // 3. Exibir um indicador de carregamento enquanto a requisição está sendo processada.
@@ -32,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 4. Fazer uma requisição HTTP (POST) para a API do n8n, enviando o texto do formulário no corpo da requisição em formato JSON.
 
-        try{
+        try {
 
             const response = await fetch('https://marc0sveiga.app.n8n.cloud/webhook/gerador-fundo', {
                 method: 'POST',
@@ -41,15 +45,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({
                     description
-                })                    
-                
+                })
+
             });
 
-            console.log(response);
+            const data = await response.json();
+            htmlCode.textContent = data.code || "";
+            cssCode.textContent = data.style || "";
 
-        }catch{
 
-        }finally{
+            preview.style.display = "block";
+            preview.innerHTML = data.code || "";
+
+            let styleTag = document.getElementById("dynamic-style");
+
+            if (styleTag) styleTag.remove();
+
+            if (data.style) {
+                styleTag = document.createElement("style");
+
+                styleTag.id = "dynamic-style";
+                styleTag.textContent = data.style;
+                document.head.appendChild(styleTag);
+            }
+
+
+
+
+
+        } catch (error){
+           console.error('Erro ao gerar o fundo', error);
+            htmlCode.textContent = "Não consegui gerar o código HTML, tente novamente.";
+            cssCode.textContent = "Não consegui gerar o código CSS, tente novamente.";
+            preview.innerHTML = "";
+
+        } finally {
+            setLoading(false);
 
         }
     });
